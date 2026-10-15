@@ -1369,6 +1369,95 @@ class="w-5 h-5"
 ></i>
 </button>
 </form>
+<!-- MULTI-FIRM: إنشاء حساب مكتب جديد -->
+<form
+id="firmSignupForm"
+class="space-y-4 text-right hidden"
+onsubmit="handleFirmSignup(event)"
+>
+<div class="relative">
+<i
+data-lucide="building-2"
+class="w-5 h-5 absolute right-4 top-1/2 -translate-y-1/2 text-cyan-300/70"
+></i>
+<input
+id="signupFirmName"
+type="text"
+required
+minlength="2"
+maxlength="120"
+autocomplete="organization"
+class="w-full glass-input pr-12 pl-4 py-3.5 rounded-2xl text-sm"
+placeholder="اسم مكتب التدقيق"
+>
+</div>
+<div class="relative">
+<i
+data-lucide="mail"
+class="w-5 h-5 absolute right-4 top-1/2 -translate-y-1/2 text-cyan-300/70"
+></i>
+<input
+id="signupEmail"
+type="email"
+required
+autocomplete="email"
+class="w-full glass-input pr-12 pl-4 py-3.5 rounded-2xl text-sm"
+placeholder="البريد الإلكتروني للمكتب"
+>
+</div>
+<div class="relative">
+<i
+data-lucide="lock"
+class="w-5 h-5 absolute right-4 top-1/2 -translate-y-1/2 text-cyan-300/70"
+></i>
+<input
+id="signupPassword"
+type="password"
+required
+minlength="8"
+autocomplete="new-password"
+class="w-full glass-input pr-12 pl-4 py-3.5 rounded-2xl text-sm"
+placeholder="كلمة المرور (8 أحرف على الأقل)"
+>
+</div>
+<div class="relative">
+<i
+data-lucide="lock-keyhole"
+class="w-5 h-5 absolute right-4 top-1/2 -translate-y-1/2 text-cyan-300/70"
+></i>
+<input
+id="signupPassword2"
+type="password"
+required
+minlength="8"
+autocomplete="new-password"
+class="w-full glass-input pr-12 pl-4 py-3.5 rounded-2xl text-sm"
+placeholder="تأكيد كلمة المرور"
+>
+</div>
+<p class="text-[11px] text-cyan-200/70 px-1 leading-6">
+تبدأ بفترة تجربة مجانية لمدة 14 يومًا. بياناتك وعملاؤك يظهرون لمكتبك فقط.
+</p>
+<button
+type="submit"
+id="firmSignupButton"
+class="w-full py-4 aqua-glow-btn text-white font-bold rounded-2xl flex items-center justify-center gap-2 text-base"
+>
+<span>إنشاء حساب المكتب</span>
+<i
+data-lucide="building-2"
+class="w-5 h-5"
+></i>
+</button>
+</form>
+<button
+type="button"
+id="toggleFirmSignup"
+onclick="toggleFirmSignup()"
+class="mt-5 text-xs text-cyan-200/80 hover:text-cyan-300 underline underline-offset-4"
+>
+إنشاء حساب مكتب جديد
+</button>
 <div class="mt-8 pt-4 border-t border-white/10 text-[11px] text-cyan-200/50">
 منظومة تدقيق رقمية آمنة • صلاحيات المدقق
 </div>
@@ -9106,6 +9195,200 @@ console.log("FINAL AUDITOR SUPABASE ENHANCEMENTS: installed");
   ======================================================= */
 
   console.log('AUDIT PORTAL V5.1 HOTFIX: installed');
+})();
+</script>
+
+<!-- =========================================================
+MULTI-FIRM + SUBSCRIPTION (تعدد المكاتب + الاشتراك)
+- تسجيل مكتب جديد: signUp ثم create_firm
+- فحص الاشتراك بعد الدخول وشاشة "انتهى الاشتراك"
+- ربط العميل الجديد بالمكتب بعد إنشائه عبر super-service
+- يحتاج تشغيل migration.sql على Supabase أولاً
+========================================================= -->
+<div id="subscriptionExpiredScreen" class="hidden min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+<div class="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl pointer-events-none"></div>
+<div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-600/30 rounded-full blur-3xl pointer-events-none"></div>
+<div class="glass-panel rounded-[2.5rem] p-8 sm:p-10 max-w-md w-full relative z-10 text-center">
+<div class="w-20 h-20 mx-auto mb-6 rounded-full border-2 border-amber-300 flex items-center justify-center bg-amber-400/10 text-amber-200">
+<i data-lucide="clock-alert" class="w-10 h-10"></i>
+</div>
+<h1 class="text-2xl font-black text-white mb-2">انتهى اشتراك المكتب</h1>
+<p id="subscriptionExpiredText" class="text-sm text-cyan-100/80 leading-7 mb-6">
+انتهت فترة الاشتراك الخاصة بمكتبكم. بياناتكم محفوظة كما هي، ويمكنكم متابعة العمل فور تجديد الاشتراك.
+</p>
+<p class="text-xs text-cyan-200/70 leading-6 mb-6">
+للتجديد (كليك أو تحويل بنكي) تواصلوا معنا، وسيتم تفعيل الحساب خلال وقت قصير.
+</p>
+<a id="subscriptionContactLink" href="#" target="_blank" rel="noopener" class="hidden w-full py-4 aqua-glow-btn text-white font-bold rounded-2xl flex items-center justify-center gap-2 text-base mb-3">
+<i data-lucide="message-circle" class="w-5 h-5"></i>
+<span>تواصل معنا للتجديد</span>
+</a>
+<button type="button" onclick="multiFirmLogout()" class="w-full py-3 rounded-2xl border border-white/15 text-cyan-100 text-sm hover:bg-white/5">
+تسجيل الخروج
+</button>
+</div>
+</div>
+<script>
+(function installMultiFirm(){
+  /* رقم واتساب الدعم بصيغة دولية بدون + (مثال: 9627XXXXXXXX). اتركيه فارغًا لإخفاء الزر. */
+  const SUPPORT_WHATSAPP = "";
+  window.currentFirm = null;
+
+  const $ = (id) => document.getElementById(id);
+  const icons = () => { try { lucide.createIcons(); } catch (_) {} };
+  const isMissingFunction = (error) =>
+    !!error && (error.code === "PGRST202" || error.code === "42883" ||
+      /could not find the function|does not exist/i.test(error.message || ""));
+
+  window.toggleFirmSignup = function(){
+    const login = $("loginForm"), signup = $("firmSignupForm"), btn = $("toggleFirmSignup");
+    const showSignup = signup.classList.contains("hidden");
+    signup.classList.toggle("hidden", !showSignup);
+    login.classList.toggle("hidden", showSignup);
+    btn.textContent = showSignup ? "لديك حساب؟ تسجيل الدخول" : "إنشاء حساب مكتب جديد";
+    icons();
+  };
+
+  window.handleFirmSignup = async function(event){
+    event.preventDefault();
+    const firmName = String($("signupFirmName").value || "").trim();
+    const email = String($("signupEmail").value || "").trim().toLowerCase();
+    const password = String($("signupPassword").value || "");
+    const password2 = String($("signupPassword2").value || "");
+    if (firmName.length < 2) return showToast("بيانات ناقصة", "اكتبي اسم المكتب.");
+    if (password.length < 8) return showToast("كلمة المرور قصيرة", "استخدمي 8 أحرف على الأقل.");
+    if (password !== password2) return showToast("كلمتا المرور غير متطابقتين", "تأكدي من كتابة نفس كلمة المرور.");
+    const button = $("firmSignupButton");
+    try {
+      if (button) { button.disabled = true; button.querySelector("span").textContent = "جارٍ إنشاء الحساب..."; }
+      const { data, error } = await supabaseClient.auth.signUp({
+        email, password,
+        options: {
+          data: { firm_name: firmName },               /* يستخدمه الـ trigger لإنشاء المكتب */
+          emailRedirectTo: window.location.origin + window.location.pathname
+        }
+      });
+      if (error) throw error;
+      if (!data?.session) {
+        /* تأكيد البريد مفعّل في Supabase: المكتب انعمل، بس لازم يأكد الإيميل */
+        showToast("تم إنشاء الحساب ✅", "افتح بريدك الإلكتروني واضغط رابط التأكيد، ثم سجّل الدخول.");
+        toggleFirmSignup();
+        $("loginEmail").value = email;
+        return;
+      }
+      const { error: firmError } = await supabaseClient.rpc("create_firm", { p_name: firmName });
+      if (firmError) throw firmError;
+      showToast("أهلًا بك 👋", "تم إنشاء مكتب «" + firmName + "» مع تجربة مجانية 14 يومًا.");
+      await completeAuditorLogin(data.session.user);
+    } catch (error) {
+      console.error("FIRM SIGNUP ERROR:", error);
+      let msg = error?.message || "تعذر إنشاء الحساب.";
+      if (/already registered|already exists/i.test(msg)) msg = "هذا البريد مسجّل مسبقًا. جرّب تسجيل الدخول.";
+      showToast("تعذر إنشاء الحساب", msg);
+    } finally {
+      if (button) { button.disabled = false; button.querySelector("span").textContent = "إنشاء حساب المكتب"; }
+    }
+  };
+
+  function showExpiredScreen(firm){
+    const login = $("loginScreen"), portal = $("portalScreen"), expired = $("subscriptionExpiredScreen");
+    if (login) login.classList.add("hidden");
+    if (portal) portal.classList.add("hidden");
+    if (expired) expired.classList.remove("hidden");
+    const end = firm?.subscription_end ? new Date(firm.subscription_end).toLocaleDateString("ar-JO") : "";
+    $("subscriptionExpiredText").textContent =
+      "انتهى اشتراك «" + (firm?.firm_name || "المكتب") + "»" + (end ? " بتاريخ " + end : "") +
+      ". بياناتكم محفوظة كما هي، ويمكنكم متابعة العمل فور تجديد الاشتراك.";
+    const link = $("subscriptionContactLink");
+    if (SUPPORT_WHATSAPP) {
+      link.href = "https://wa.me/" + SUPPORT_WHATSAPP + "?text=" +
+        encodeURIComponent("مرحبًا، أرغب بتجديد اشتراك مكتب: " + (firm?.firm_name || ""));
+      link.classList.remove("hidden");
+    }
+    setSystemStatus(false, "الاشتراك منتهي");
+    icons();
+  }
+
+  window.multiFirmLogout = async function(){
+    try { await supabaseClient.auth.signOut(); } catch (_) {}
+    $("subscriptionExpiredScreen").classList.add("hidden");
+    $("loginScreen").classList.remove("hidden");
+  };
+
+  async function loadMyFirm(user){
+    let { data, error } = await supabaseClient.rpc("my_firm");
+    if (error) return { error };
+    let firm = Array.isArray(data) ? data[0] : data;
+    if (!firm) {
+      /* حساب جديد بدون مكتب (مثلاً بعد تأكيد الإيميل): نكمّل إنشاء المكتب من الاسم المحفوظ */
+      const pendingName = user?.user_metadata?.firm_name;
+      if (pendingName) {
+        const { error: createError } = await supabaseClient.rpc("create_firm", { p_name: pendingName });
+        if (!createError) {
+          ({ data, error } = await supabaseClient.rpc("my_firm"));
+          firm = Array.isArray(data) ? data[0] : data;
+        }
+      }
+    }
+    return { firm: firm || null };
+  }
+
+  const baseCompleteMultiFirm = completeAuditorLogin;
+  completeAuditorLogin = async function(user){
+    const { firm, error } = await loadMyFirm(user);
+    if (error) {
+      if (isMissingFunction(error)) {
+        /* migration.sql لسا ما انشغّل: نشتغل زي قبل */
+        console.warn("MULTI-FIRM: my_firm() not found — running in single-firm mode.");
+        return baseCompleteMultiFirm(user);
+      }
+      console.error("MY FIRM ERROR:", error);
+      showToast("تعذر التحقق من الاشتراك", error.message || "حاول مرة أخرى.");
+      return false;
+    }
+    if (!firm) {
+      /* مستخدم مش عضو بأي مكتب (أو حساب عميل): ما بندخله */
+      showToast("الحساب غير مرتبط بمكتب", "هذا الحساب غير مرتبط بأي مكتب تدقيق. سجّل مكتبًا جديدًا أو تواصل مع الدعم.");
+      await supabaseClient.auth.signOut();
+      return false;
+    }
+    window.currentFirm = firm;
+    if (!firm.is_active) {
+      showExpiredScreen(firm);
+      return false;
+    }
+    const ok = await baseCompleteMultiFirm(user);
+    if (ok !== false && !document.getElementById("portalScreen")?.classList.contains("hidden")) {
+      if (firm.firm_name) document.querySelectorAll(".brand-sub").forEach((el) => { el.textContent = firm.firm_name; });
+      if (Number(firm.days_left) <= 5) {
+        showToast("تنبيه الاشتراك", "متبقٍ " + firm.days_left + " يوم على انتهاء اشتراك المكتب.");
+      }
+    }
+    return ok;
+  };
+
+  /* بعد إنشاء عميل عن طريق super-service: إذا رجع بدون firm_id نربطه بمكتبنا */
+  try {
+    const fnProto = Object.getPrototypeOf(supabaseClient.functions);
+    if (fnProto && typeof fnProto.invoke === "function" && !fnProto.__multiFirmPatched) {
+      const originalInvoke = fnProto.invoke;
+      fnProto.invoke = async function(...args){
+        const result = await originalInvoke.apply(this, args);
+        const client = result?.data?.client;
+        if (client?.id && !client.firm_id && window.currentFirm) {
+          const { error } = await supabaseClient.rpc("claim_client", { p_client_id: String(client.id) });
+          if (error) console.warn("CLAIM CLIENT ERROR:", error.message);
+          else client.firm_id = window.currentFirm.firm_id;
+        }
+        return result;
+      };
+      fnProto.__multiFirmPatched = true;
+    }
+  } catch (error) {
+    console.warn("MULTI-FIRM invoke patch skipped:", error);
+  }
+
+  console.log("MULTI-FIRM: installed");
 })();
 </script>
 
